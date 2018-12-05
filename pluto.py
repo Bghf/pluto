@@ -23,89 +23,90 @@ class Rover:
     self.y = 0
     self.direction = Direction.NORTH
 
-  def move_forward(self):
-    if self.direction == Direction.NORTH:
-        self.y = self.y + 1
-    elif self.direction == Direction.EAST:
-        self.x = self.x + 1
-    elif self.direction == Direction.SOUTH:
-        self.y = self.y - 1
-    elif self.direction == Direction.WEST:
-        self.x = self.x - 1
 
-  def move_backward(self):
+  def execute(self, cmds):
+    for cmd in cmds:
+      if cmd == 'F':
+        self._move(1)
+      elif cmd == 'B':
+        self._move(-1)
+      elif cmd == 'L':
+        self._turn(-90)
+      elif cmd == 'R':
+        self._turn(90)
+
+
+  def _move(self, inc):
     if self.direction == Direction.NORTH:
-        self.y = self.y - 1
+      self.y = self.y + inc
     elif self.direction == Direction.EAST:
-        self.x = self.x - 1
+      self.x = self.x + inc
     elif self.direction == Direction.SOUTH:
-        self.y = self.y + 1
+      self.y = self.y - inc
     elif self.direction == Direction.WEST:
-        self.x = self.x + 1
+      self.x = self.x - inc
+
+  def _turn(self, degree):
+    if degree == 90:
+      self.direction = Direction.next_clockwise(self.direction)
+    elif degree == -90:
+      self.direction = Direction.next_anticlockwise(self.direction)  
 
   def get_state(self):
     return [self.x, self.y, self.direction]
-
-  def turn_clockwise(self):
-    self.direction = Direction.next_clockwise(self.direction)
-
-  def turn_anticlockwise(self):
-    self.direction = Direction.next_anticlockwise(self.direction)        
+      
 
     
 class TestRover(TestCase) :
   def test_move_forward_increments_y(self):
     rover = Rover()
-    rover.move_forward()
-    self.assertEqual(rover.get_state() ,[0, 1, 0])
+    rover.execute('F')
+    self.assertEqual(rover.get_state(), [0, 1, 0])
 
   def test_move_backward_decrements_y(self):
     rover = Rover()
-    rover.move_backward()
-    self.assertEqual(rover.get_state() ,[0, -1, 0])
+    rover.execute('B')
+    self.assertEqual(rover.get_state(), [0, -1, 0])
+
+  def test_executes_multiple_commands(self):
+    rover = Rover()
+    rover.execute('FFFFB')
+    self.assertEqual(rover.get_state() ,[0, 3, 0])
 
   def test_turns_clockwise_correctly(self):
     rover = Rover()
     self.assertEqual(rover.get_state(), [0, 0, 0])
-    rover.turn_clockwise()
+    rover.execute('R')
     self.assertEqual(rover.get_state(), [0, 0, 1])
-    rover.turn_clockwise()
+    rover.execute('R')
     self.assertEqual(rover.get_state(), [0, 0, 2])
-    rover.turn_clockwise()
+    rover.execute('R')
     self.assertEqual(rover.get_state(), [0, 0, 3])
-    rover.turn_clockwise()
+    rover.execute('R')
     self.assertEqual(rover.get_state(), [0, 0, 0])
-
 
   def test_turns_anticlockwise_correctly(self):
     rover = Rover()
     self.assertEqual(rover.get_state(), [0, 0, 0])
-    rover.turn_anticlockwise()
+    rover.execute('L')
     self.assertEqual(rover.get_state(), [0, 0, 3])
-    rover.turn_anticlockwise()
+    rover.execute('L')
     self.assertEqual(rover.get_state(), [0, 0, 2])
-    rover.turn_anticlockwise()
+    rover.execute('L')
     self.assertEqual(rover.get_state(), [0, 0, 1])
-    rover.turn_anticlockwise()
+    rover.execute('L')
     self.assertEqual(rover.get_state(), [0, 0, 0])
   
   def test_moves_in_the_right_direction(self):
     rover = Rover()
-    rover.move_forward()
-    rover.move_forward()
-    rover.turn_clockwise()
-    rover.move_forward()
-    self.assertEqual(rover.get_state() ,[1, 2, 1])
-    rover.turn_clockwise()
-    rover.move_forward()
-    self.assertEqual(rover.get_state() ,[1, 1, 2])
-    rover.turn_clockwise()
-    rover.move_forward()
-    self.assertEqual(rover.get_state() ,[0, 1, 3])
-    rover.turn_clockwise()
-    rover.move_forward()
-    self.assertEqual(rover.get_state() ,[0, 2, 0])
-
+    rover.execute('FFRF')
+    self.assertEqual(rover.get_state(), [1, 2, 1])
+    rover.execute('RF')
+    self.assertEqual(rover.get_state(), [1, 1, 2])
+    rover.execute('RF')
+    self.assertEqual(rover.get_state(), [0, 1, 3])
+    rover.execute('RF')
+    self.assertEqual(rover.get_state(), [0, 2, 0])
 
 if __name__ == '__main__':
     unittest.main()
