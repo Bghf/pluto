@@ -18,11 +18,12 @@ class Direction:
 
 
 class Rover:
-  def __init__(self):
+  def __init__(self, xlimit=100, ylimit=100):
     self.x = 0
     self.y = 0
     self.direction = Direction.NORTH
-
+    self.xlimit = xlimit
+    self.ylimit = ylimit
 
   def execute(self, cmds):
     for cmd in cmds:
@@ -35,6 +36,15 @@ class Rover:
       elif cmd == 'R':
         self._turn(90)
 
+  def _reform_bounds(self):
+    while (self.x <= 0):
+      self.x = self.x + self.xlimit
+    while (self.x >= self.xlimit):
+      self.x = self.x - self.xlimit
+    while (self.y <= 0):
+      self.y = self.y + self.ylimit
+    while (self.y >= self.ylimit):
+      self.y = self.y - self.ylimit
 
   def _move(self, inc):
     if self.direction == Direction.NORTH:
@@ -45,6 +55,7 @@ class Rover:
       self.y = self.y - inc
     elif self.direction == Direction.WEST:
       self.x = self.x - inc
+    self._reform_bounds()
 
   def _turn(self, degree):
     if degree == 90:
@@ -65,8 +76,10 @@ class TestRover(TestCase) :
 
   def test_move_backward_decrements_y(self):
     rover = Rover()
+    rover.execute('F')
+    self.assertEqual(rover.get_state(), [0, 1, 0])
     rover.execute('B')
-    self.assertEqual(rover.get_state(), [0, -1, 0])
+    self.assertEqual(rover.get_state(), [0, 0, 0])
 
   def test_executes_multiple_commands(self):
     rover = Rover()
@@ -107,6 +120,33 @@ class TestRover(TestCase) :
     self.assertEqual(rover.get_state(), [0, 1, 3])
     rover.execute('RF')
     self.assertEqual(rover.get_state(), [0, 2, 0])
+
+  def test_wraps_edges_around_y(self):
+    rover = Rover(10, 50)
+    rover.execute('F' * 49)
+    self.assertEqual(rover.get_state(), [0, 49, 0])
+    rover.execute('F')
+    self.assertEqual(rover.get_state(), [0, 0, 0])
+    rover = Rover(10, 50)
+    rover.execute('F' * 101)
+    self.assertEqual(rover.get_state(), [0, 1, 0])
+
+  def test_wraps_edges_around_y2(self):
+    rover = Rover(10, 50)
+    rover.execute('B' * 101)
+    self.assertEqual(rover.get_state(), [0, 49, 0])
+
+  def test_wraps_edges_around_x(self):
+    rover = Rover(10, 50)
+    rover.execute('R' + 'F' * 9)
+    self.assertEqual(rover.get_state(), [9, 0, 1])
+    rover.execute('F')
+    self.assertEqual(rover.get_state(), [0, 0, 1])
+
+  def test_wraps_edges_around_x2(self):
+    rover = Rover(10, 50)
+    rover.execute('L' + 'B' * 24)
+    self.assertEqual(rover.get_state(), [4, 0, 3])
 
 if __name__ == '__main__':
     unittest.main()
