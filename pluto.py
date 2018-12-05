@@ -28,7 +28,7 @@ class Rover:
 
   def get_state(self):
     return [self.x, self.y, self.direction]
-    
+
   def execute(self, cmds):
     for cmd in cmds:
       if cmd == 'F':
@@ -41,14 +41,8 @@ class Rover:
         self._turn(90)
 
   def _reform_bounds(self):
-    if self.x < 0:
-      self.x = self.x + self.xlimit
-    if self.y < 0:
-      self.y = self.y + self.ylimit
-    if self.x >= self.xlimit:
-      self.x = self.x % self.xlimit
-    if self.y >= self.ylimit:
-      self.y = self.y % self.ylimit
+    self.x = self.x % self.xlimit
+    self.y = self.y % self.ylimit
 
   def _move(self, inc):
     prevX = self.x
@@ -73,8 +67,6 @@ class Rover:
       self.direction = Direction.next_clockwise(self.direction)
     elif degree == -90:
       self.direction = Direction.next_anticlockwise(self.direction)  
-
-      
 
 
 class TestRover(TestCase) :
