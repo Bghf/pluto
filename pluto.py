@@ -18,12 +18,13 @@ class Direction:
 
 
 class Rover:
-  def __init__(self, xlimit=100, ylimit=100):
+  def __init__(self, xlimit=100, ylimit=100, obstacles={}):
     self.x = 0
     self.y = 0
     self.direction = Direction.NORTH
     self.xlimit = xlimit
     self.ylimit = ylimit
+    self.obstacles = obstacles
 
   def execute(self, cmds):
     for cmd in cmds:
@@ -37,16 +38,18 @@ class Rover:
         self._turn(90)
 
   def _reform_bounds(self):
-    while (self.x <= 0):
+    if self.x < 0:
       self.x = self.x + self.xlimit
-    while (self.x >= self.xlimit):
-      self.x = self.x - self.xlimit
-    while (self.y <= 0):
+    if self.y < 0:
       self.y = self.y + self.ylimit
-    while (self.y >= self.ylimit):
-      self.y = self.y - self.ylimit
+    if self.x >= self.xlimit:
+      self.x = self.x % self.xlimit
+    if self.y >= self.ylimit:
+      self.y = self.y % self.ylimit
 
   def _move(self, inc):
+    prevX = self.x
+    prevY = self.y
     if self.direction == Direction.NORTH:
       self.y = self.y + inc
     elif self.direction == Direction.EAST:
@@ -56,6 +59,9 @@ class Rover:
     elif self.direction == Direction.WEST:
       self.x = self.x - inc
     self._reform_bounds()
+    if (self.x, self.y) in self.obstacles:
+      self.x = prevX
+      self.y = prevY
 
   def _turn(self, degree):
     if degree == 90:
@@ -67,7 +73,7 @@ class Rover:
     return [self.x, self.y, self.direction]
       
 
-    
+
 class TestRover(TestCase) :
   def test_move_forward_increments_y(self):
     rover = Rover()
@@ -147,6 +153,21 @@ class TestRover(TestCase) :
     rover = Rover(10, 50)
     rover.execute('L' + 'B' * 24)
     self.assertEqual(rover.get_state(), [4, 0, 3])
+
+  def test_wrap_at_0(self):
+    rover = Rover()
+    rover.execute('BF')
+    self.assertEqual(rover.get_state(), [0, 0, 0])
+    rover.execute('FFBB')
+    self.assertEqual(rover.get_state(), [0, 0, 0])
+
+  def test_doesnt_move_if_hits_obstacle(self):
+    rover = Rover(10, 10, {(1,2)})
+    rover.execute("FFR")
+    self.assertEqual(rover.get_state(), [0, 2, 1])
+    rover.execute("F")
+    self.assertEqual(rover.get_state(), [0, 2, 1])
+
 
 if __name__ == '__main__':
     unittest.main()
