@@ -26,6 +26,9 @@ class Rover:
     self.ylimit = ylimit
     self.obstacles = obstacles
 
+  def get_state(self):
+    return [self.x, self.y, self.direction]
+    
   def execute(self, cmds):
     for cmd in cmds:
       if cmd == 'F':
@@ -59,18 +62,18 @@ class Rover:
     elif self.direction == Direction.WEST:
       self.x = self.x - inc
     self._reform_bounds()
-    if (self.x, self.y) in self.obstacles:
+    # this will not work for incs other than 1, we would need to search all the map
+    if (self.x, self.y) in self.obstacles: 
       self.x = prevX
       self.y = prevY
 
   def _turn(self, degree):
+    # todo add other angles for completeness
     if degree == 90:
       self.direction = Direction.next_clockwise(self.direction)
     elif degree == -90:
       self.direction = Direction.next_anticlockwise(self.direction)  
 
-  def get_state(self):
-    return [self.x, self.y, self.direction]
       
 
 
@@ -168,6 +171,12 @@ class TestRover(TestCase) :
     rover.execute("F")
     self.assertEqual(rover.get_state(), [0, 2, 1])
 
+  def test_doesnt_move_through_obstacles(self):
+    rover = Rover(10, 10, {(1,2)})
+    rover.execute("RF")
+    self.assertEqual(rover.get_state(), [1, 0, 1])
+    rover.execute("LFFFFFFFFF")
+    self.assertEqual(rover.get_state(), [1, 1, 0])
 
 if __name__ == '__main__':
     unittest.main()
